@@ -5,7 +5,7 @@
 #include "ActorHelpers.generated.h"
 
 UCLASS()
-class ZOMBIETOWN_API UActorHelpers : public UObject
+class ORBINAUT_API UActorHelpers : public UObject
 {
 	GENERATED_BODY()
 

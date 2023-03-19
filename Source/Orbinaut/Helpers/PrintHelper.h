@@ -7,7 +7,7 @@
 #include "PrintHelper.generated.h"
 
 UCLASS()
-class ZOMBIETOWN_API UPrintHelper : public UObject
+class ORBINAUT_API UPrintHelper : public UObject
 {
 	GENERATED_BODY()
 };

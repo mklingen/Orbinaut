@@ -9,7 +9,7 @@ class UNiagaraSystem;
 class USoundAttenuation;
 
 USTRUCT(Blueprintable)
-struct ZOMBIETOWN_API FSFXHelpers
+struct ORBINAUT_API FSFXHelpers
 {
 	GENERATED_BODY()
 
