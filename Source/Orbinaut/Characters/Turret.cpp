@@ -21,10 +21,27 @@ void ATurret::BeginPlay()
     Super::BeginPlay();
 
     // Start firing bullets
-    GetWorldTimerManager().SetTimer(FireTimerHandle, this, &ATurret::FireBullet, FireRate, true);
+    GetWorldTimerManager().SetTimer(FireTimerHandle, this, &ATurret::FireTimerCallback, FireRate, true);
 }
 
-void ATurret::FireBullet()
+void ATurret::FireTimerCallback()
+{
+    switch (ShootMode)
+    {
+        case ETurretShootMode::TrackPlayer:
+        {
+            FireBulletAtPlayer();
+            break;
+        }
+        case ETurretShootMode::Fixed:
+        {
+            FireBullet(GunMeshComponent->GetComponentRotation());
+            break;
+        }
+    }
+}
+
+void ATurret::FireBulletAtPlayer()
 {
     AActor* Player = GetPlayer();
     if (Player != nullptr)
@@ -39,15 +56,20 @@ void ATurret::FireBullet()
             // Fire bullet at player
             FRotator Rotation = (PlayerLocation - TurretLocation).Rotation();
             Rotation = FRotator(0.0f, Rotation.Yaw, 0.0f);
-            FVector Position = GunMeshComponent->GetComponentTransform().TransformPosition(MuzzleLocation);
-            ShootSFX.Play(GetOwner(), Position, Rotation, GunMeshComponent->GetComponentScale());
-            Position.Z = 0;
-            AActor* Bullet = GetWorld()->SpawnActor<AActor>(BulletClass, Position, Rotation);
-            if (Bullet != nullptr)
-            {
-                Bullet->SetOwner(this);
-            }
+            FireBullet(Rotation);
         }
+    }
+}
+
+void ATurret::FireBullet(const FRotator& Rotation)
+{
+    FVector Position = GunMeshComponent->GetComponentTransform().TransformPosition(MuzzleLocation);
+    ShootSFX.Play(GetOwner(), Position, Rotation, GunMeshComponent->GetComponentScale());
+    Position.Z = 0;
+    AActor* Bullet = GetWorld()->SpawnActor<AActor>(BulletClass, Position, Rotation);
+    if (Bullet != nullptr)
+    {
+        Bullet->SetOwner(this);
     }
 }
 
@@ -74,16 +96,19 @@ AActor* ATurret::GetPlayer()
 }
  void ATurret::Tick(float DeltaTime)
 {
-     AActor* Player = GetPlayer();
-     if (Player != nullptr)
+     if (ShootMode == ETurretShootMode::TrackPlayer)
      {
-         FVector PlayerLocation = Player->GetActorLocation();
-         FVector TurretLocation = GetActorLocation();
-         float DistanceToPlayer = FVector::Distance(PlayerLocation, TurretLocation);
-
-         if (DistanceToPlayer <= FireRange)
+         AActor* Player = GetPlayer();
+         if (Player != nullptr)
          {
-             RotateTurretTowardsPlayer();
+             FVector PlayerLocation = Player->GetActorLocation();
+             FVector TurretLocation = GetActorLocation();
+             float DistanceToPlayer = FVector::Distance(PlayerLocation, TurretLocation);
+
+             if (DistanceToPlayer <= FireRange)
+             {
+                 RotateTurretTowardsPlayer();
+             }
          }
      }
 }

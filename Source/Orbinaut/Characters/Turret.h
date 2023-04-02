@@ -5,6 +5,13 @@
 #include "Orbinaut/Helpers/SFXHelpers.h"
 #include "Turret.generated.h"
 
+UENUM()
+enum ETurretShootMode
+{
+    TrackPlayer     UMETA(DisplayName = "Track Player"),
+    Fixed      UMETA(DisplayName = "Fixed")
+};
+
 UCLASS()
 class ORBINAUT_API ATurret : public APawn
 {
@@ -46,10 +53,20 @@ protected:
     // spawned from here, and SFX are spawned here too.
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Shooting")
         FVector MuzzleLocation;
+
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Shooting")
+        TEnumAsByte<ETurretShootMode> ShootMode = ETurretShootMode::TrackPlayer;
     
 private:
     UFUNCTION()
-        void FireBullet();
+        void FireBulletAtPlayer();
+
+    UFUNCTION()
+        void FireBullet(const FRotator& Rotation);
+
+    UFUNCTION()
+        void FireTimerCallback();
+
 
     UFUNCTION()
         void RotateTurretTowardsPlayer();

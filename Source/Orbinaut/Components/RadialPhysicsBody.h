@@ -25,7 +25,14 @@ protected:
 	UPROPERTY()
 		TArray<class URadialPhysicsSource*> SourcesInRadius;
 
+	UPROPERTY()
+		TArray<class UNiagaraComponent*> AttractionParticleSystems;
+
 	FVector SetFromClosestSource();
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "SFX")
+		class UNiagaraSystem* AttractionParticles = nullptr;
+
 
 public:	
 	// Called every frame
