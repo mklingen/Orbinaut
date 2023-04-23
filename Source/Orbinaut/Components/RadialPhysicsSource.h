@@ -41,6 +41,11 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 		float InfluenceRadius = 5000;
 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+		bool IsEnabled = true;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "SFX")
+		class UNiagaraSystem* AttractionParticles = nullptr;
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 		class USphereComponent* SphereCollider;

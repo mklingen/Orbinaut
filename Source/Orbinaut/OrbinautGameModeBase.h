@@ -56,4 +56,12 @@ public:
 	virtual void BeginPlay() override;
 
 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+		TSubclassOf<class UGemCounter> GemCounterClass;
+
+private:
+	UPROPERTY()
+		class UGemCounter* GemCounterWidget = nullptr;
+
+	void UpdateGemCount();
 };

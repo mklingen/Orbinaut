@@ -83,10 +83,15 @@ void URadialPhysicsBody::OnEnterRadius(class URadialPhysicsSource* source)
 	{
 		SourcesInRadius.Add(source);
 	}
-	if (AttractionParticles)
+	if (source->AttractionParticles)
 	{
-		AttractionParticleSystems.Add(UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetOwner(), AttractionParticles,
+		AttractionParticleSystems.Add(UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetOwner(), source->AttractionParticles,
 			source->GetComponentLocation(), FRotator(), FVector::One(), true, true));
+		AttractionParticleSystems.Last()->Deactivate();
+	}
+	else
+	{
+		AttractionParticleSystems.Add(nullptr);
 	}
 }
 
@@ -105,9 +110,12 @@ void URadialPhysicsBody::OnLeaveRadius(URadialPhysicsSource* source)
 			}
 		}
 		SourcesInRadius.Remove(source);
-		if (idx >= 0 && AttractionParticles)
+		if (idx >= 0)
 		{
-			AttractionParticleSystems[idx]->DestroyComponent();
+			if (AttractionParticleSystems[idx])
+			{
+				AttractionParticleSystems[idx]->DestroyComponent();
+			}
 			AttractionParticleSystems.RemoveAt(idx);
 		}
 	}
@@ -125,14 +133,22 @@ FVector URadialPhysicsBody::SetFromClosestSource()
 	static const FString intensity("Intensity");
 	for (const URadialPhysicsSource* source : SourcesInRadius)
 	{
+		if (!source->IsEnabled)
+		{
+			k++;
+			continue;
+		}
 		FVector g = CalculateGravity(source->GetComponentLocation(), source->Constant, source->Linear, source->Square);
-		if (AttractionParticles)
+		if (source->AttractionParticles)
 		{
 			UNiagaraComponent* particles = AttractionParticleSystems[k];
-			particles->SetNiagaraVariableVec3(start, source->GetComponentLocation());
-			particles->SetNiagaraVariableVec3(end, GetOwner()->GetActorLocation());
-			particles->SetNiagaraVariableFloat(intensity, g.Length());
-			particles->Activate();
+			if (particles)
+			{
+				particles->SetNiagaraVariableVec3(start, source->GetComponentLocation());
+				particles->SetNiagaraVariableVec3(end, GetOwner()->GetActorLocation());
+				particles->SetNiagaraVariableFloat(intensity, g.Length());
+				particles->Activate();
+			}
 		}
 		grav += g;
 		k++;

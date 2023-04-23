@@ -17,25 +17,15 @@ URadialPhysicsSource::URadialPhysicsSource()
 
 void URadialPhysicsSource::InitializeComponent()
 {
-	// First try to find an existing collider, if it exists.
-	if (GetOwner())
-	{
-		SphereCollider = GetOwner()->FindComponentByClass<USphereComponent>();
-	}
-	if (SphereCollider)
-	{
-		return;
-	}
-
-	// If it doesn't, create one instead.
-	SphereCollider = NewObject<USphereComponent>(GetOwner(), TEXT("SphereCollider"));
-	SphereCollider->SetupAttachment(GetOwner()->GetRootComponent());
+	// Create a sphere to represent the gravity field.
+	SphereCollider = NewObject<USphereComponent>(GetOwner(), TEXT("GravitySphere"));
 	SphereCollider->CreationMethod = EComponentCreationMethod::Instance;
-	SphereCollider->RegisterComponent();
 	SphereCollider->InitSphereRadius(InfluenceRadius);
 	SphereCollider->SetGenerateOverlapEvents(true);
-	SphereCollider->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
+	SphereCollider->SetCollisionProfileName("GravitySource");
 	SphereCollider->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	SphereCollider->SetupAttachment(GetOwner()->GetRootComponent());
+	SphereCollider->RegisterComponent();
 }
 
 
@@ -50,9 +40,11 @@ void URadialPhysicsSource::BeginPlay()
 		return;
 	}
 
+	SetRelativeLocation(FVector::Zero());
 
 	if (SphereCollider)
 	{
+		SphereCollider->SetRelativeLocation(FVector::Zero());
 		SphereCollider->SetSphereRadius(0.001f);
 		SphereCollider->OnComponentBeginOverlap.AddDynamic(this, &URadialPhysicsSource::OnSphereOverlap);
 		SphereCollider->OnComponentEndOverlap.AddDynamic(this, &URadialPhysicsSource::OnSphereEndOverlap);
@@ -75,6 +67,10 @@ void URadialPhysicsSource::OnSphereOverlap(UPrimitiveComponent* OverlappedComp,
 										   UPrimitiveComponent* OtherComp, 
 										   int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	if (OtherActor == GetOwner()) 
+	{
+		return;
+	}
 	URadialPhysicsBody* body = OtherActor->FindComponentByClass<URadialPhysicsBody>();
 	if (body)
 	{
@@ -85,6 +81,10 @@ void URadialPhysicsSource::OnSphereOverlap(UPrimitiveComponent* OverlappedComp,
 
 void URadialPhysicsSource::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
+	if (OtherActor == GetOwner())
+	{
+		return;
+	}
 	URadialPhysicsBody* body = OtherActor->FindComponentByClass<URadialPhysicsBody>();
 	if (body)
 	{

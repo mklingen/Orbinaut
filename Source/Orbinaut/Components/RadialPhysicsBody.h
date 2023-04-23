@@ -30,9 +30,6 @@ protected:
 
 	FVector SetFromClosestSource();
 
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "SFX")
-		class UNiagaraSystem* AttractionParticles = nullptr;
-
 
 public:	
 	// Called every frame

@@ -7,6 +7,7 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Orbinaut/Components/RadialPhysicsBody.h"
+#include "Orbinaut/Components/RadialPhysicsSource.h"
 #include "NiagaraComponent.h"
 #include "Orbinaut/Components/CollectableComponent.h"
 #include "Orbinaut/OrbinautGameModeBase.h"
@@ -45,6 +46,13 @@ AOrbinautCharacter::AOrbinautCharacter()
     StaticMesh->SetupAttachment(RootComponent);
 
     RadialPhysics = CreateDefaultSubobject<URadialPhysicsBody>(TEXT("RadialPhysics"));
+    TractorBeam = CreateDefaultSubobject<URadialPhysicsSource>(TEXT("TractorBeam"));
+    TractorBeam->IsEnabled = false;
+    TractorBeam->Constant = MaxSuckForce;
+    TractorBeam->Linear = 0;
+    TractorBeam->Square = 0;
+    TractorBeam->SetupAttachment(RootComponent);
+
     UEnum* staticEnum = StaticEnum < EThrustDirection>();
     Thrusters.Empty();
     // Initialize each thruster.
@@ -121,8 +129,11 @@ void AOrbinautCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
     // Bind the LeftRight axis to a function that sets the current value of the LeftRight member variable
     PlayerInputComponent->BindAxis("LeftRight", this, &AOrbinautCharacter::SetLeftRight);
 
-    // Bind the Thrust axis to a function that sets the current value of the Thrust member variable
+    // Bind the UpDown axis to a function that sets the current value of the UpDown member variable
     PlayerInputComponent->BindAxis("UpDown", this, &AOrbinautCharacter::SetUpDown);
+
+    // Bind the SuckBlow  axis to a function that sets whether we are sucking or blowing with the tractor beam.
+    PlayerInputComponent->BindAxis("SuckBlow", this, &AOrbinautCharacter::SetTractorBeamValue);
 }
 
 void AOrbinautCharacter::FireThruster(EThrustDirection direction, bool bOn)
@@ -209,6 +220,7 @@ void AOrbinautCharacter::Die()
     {
         return;
     }
+    TractorBeam->IsEnabled = false;
     Disable(true);
 
     auto deathCallbacks = GET_INTERFACES_RECURSIVE(DeathCallback, this);
@@ -220,5 +232,58 @@ void AOrbinautCharacter::Die()
     if (GameMode)
     {
         GameMode->RestartLevel(DelayRestartAfterDeath);
+    }
+}
+
+
+
+void AOrbinautCharacter::StartSucking()
+{
+    if (IsDead)
+    {
+        return;
+    }
+    TractorBeam->Constant = MaxSuckForce;
+    TractorBeam->IsEnabled = true;
+    TractorBeamMode = ETractorBeamMode::Sucking;
+}
+
+
+void AOrbinautCharacter::StartBlowing()
+{
+    if (IsDead)
+    {
+        return;
+    }
+    TractorBeam->Constant = -MaxBlowForce;
+    TractorBeam->IsEnabled = true;
+    TractorBeamMode = ETractorBeamMode::Blowing;
+}
+
+
+void AOrbinautCharacter::StopTractorBeam()
+{
+    if (IsDead)
+    {
+        return;
+    }
+    TractorBeam->Constant = -MaxBlowForce;
+    TractorBeam->IsEnabled = false;
+    TractorBeamMode = ETractorBeamMode::Off;
+}
+
+void AOrbinautCharacter::SetTractorBeamValue(float value)
+{
+    if (FMath::Abs(value) < 1e-5)
+    {
+        StopTractorBeam();
+    }
+    else if (value > 0)
+    {
+        StartBlowing();
+    }
+    else
+    {
+        StartSucking();
     }
 }

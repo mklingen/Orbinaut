@@ -4,6 +4,8 @@
 #include "OrbinautGameModeBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "Orbinaut/Helpers/PrintHelper.h"
+#include "Orbinaut/Widgets/GemCounter.h"
+#include "Blueprint/UserWidget.h"
 
 bool AOrbinautGameModeBase::CanOpenPortal() const
 {
@@ -23,17 +25,36 @@ void AOrbinautGameModeBase::OnGemCollected()
 	{
 		OnClosePortal.Broadcast();
 	}
+	UpdateGemCount();
+}
+
+void AOrbinautGameModeBase::UpdateGemCount()
+{
+	if (GemCounterWidget)
+	{
+		GemCounterWidget->SetGemCount(NumCollectedGems, NumGemsInLevel);
+	}
 }
 
 void AOrbinautGameModeBase::BeforeNewLevelLoaded()
 {
 	NumCollectedGems = 0;
 	NumGemsInLevel = 0;
+	UpdateGemCount();
 }
 
 void AOrbinautGameModeBase::BeginPlay()
 {
 	Super::BeginPlay();
+	if (GemCounterClass)
+	{
+		GemCounterWidget = CreateWidget<UGemCounter>(GetWorld(), GemCounterClass);
+		if (GemCounterWidget)
+		{
+			GemCounterWidget->AddToViewport();
+		}
+	}
+	UpdateGemCount();
 }
 
 void AOrbinautGameModeBase::ExitLevel(float DelayTime)
@@ -49,6 +70,7 @@ void AOrbinautGameModeBase::RestartLevel(float DelayTime)
 	{
 		BeforeNewLevelLoaded();
 		UGameplayStatics::OpenLevel(this, FName(*GetWorld()->GetName()), false);
+		UpdateGemCount();
 	};
 	if (DelayTime <= 0.0)
 	{

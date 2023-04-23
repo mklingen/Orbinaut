@@ -19,6 +19,14 @@ enum class EThrustDirection : uint8 {
 	VE_Right	   UMETA(DisplayName = "Right")
 };
 
+// Sucking and blowing state.
+UENUM(BlueprintType)
+enum class ETractorBeamMode : uint8 {
+	Off          UMETA(DisplayName = "Off"),
+	Sucking        UMETA(DisplayName = "Sucking"),
+	Blowing        UMETA(DisplayName = "Blowing")
+};
+
 // Represents a thruster and its special effects.
 USTRUCT(BlueprintType)
 struct FThrusterSFX {
@@ -61,6 +69,19 @@ public:
 	UFUNCTION()
 		void SetUpDown(float Value);
 
+	UFUNCTION()
+		void StartSucking();
+
+	UFUNCTION()
+		void StartBlowing();
+
+	UFUNCTION()
+		void StopTractorBeam();
+
+	// -1 = suck, +1 = blow, 0 = stop.
+	UFUNCTION()
+		void SetTractorBeamValue(float value);
+
 	UFUNCTION(BlueprintCallable)
 		void Die();
 
@@ -91,6 +112,11 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Gameplay")
 		float DelayRestartAfterDeath = 2.0f;
 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Tractor Beam")
+		float MaxSuckForce = 40000;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Tractor Beam")
+		float MaxBlowForce = 40000;
+
 	UFUNCTION()
 		void BeginOverlap(UPrimitiveComponent* OverlappedComponent,
 			AActor* OtherActor,
@@ -113,12 +139,18 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 		class URadialPhysicsBody* RadialPhysics;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+		class URadialPhysicsSource* TractorBeam;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Thrusters")
 		TMap<EThrustDirection, FThrusterSFX> Thrusters;
 
 	// Pointer to the main game mode.
 	UPROPERTY()
 		class AOrbinautGameModeBase* GameMode = nullptr;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Tractor Beam")
+		TEnumAsByte<ETractorBeamMode> TractorBeamMode = ETractorBeamMode::Off;
 
 	void FireThruster(EThrustDirection direction, bool bOn);
 };

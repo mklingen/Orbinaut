@@ -23,14 +23,32 @@ void UKillPlayerOnOverlapComponent::BeginPlay()
 	// Bind the OnActorBeginOverlap function to the OnComponentBeginOverlap event.
 	if (GetOwner())
 	{
-		GetOwner()->OnActorBeginOverlap.AddDynamic(this, &UKillPlayerOnOverlapComponent::OnActorBeginOverlap);
+		TArray<UActorComponent*> primtives = GetOwner()->GetComponentsByClass(UPrimitiveComponent::StaticClass());
+		for (UActorComponent* component : primtives)
+		{
+			UPrimitiveComponent* prim = Cast<UPrimitiveComponent>(component);
+			if (prim && prim->GetCollisionProfileName() == "KillZone")
+			{
+				// Lol hack.
+				prim->OnComponentBeginOverlap.AddDynamic(this, &UKillPlayerOnOverlapComponent::OnOverlapBegin);
+			}
+		}
 	}
 	
 }
 
 
-void UKillPlayerOnOverlapComponent::OnActorBeginOverlap(AActor* OverlappedActor, AActor* OtherActor)
+void UKillPlayerOnOverlapComponent::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, 
+												   AActor* OtherActor, 
+												   UPrimitiveComponent* OtherComp, 
+												   int32 OtherBodyIndex, 
+												   bool bFromSweep, const FHitResult& SweepResult)
 {
+	if (OtherComp->GetCollisionProfileName() == "GravitySource")
+	{
+		// Lol, hack.
+		return;
+	}
 	AOrbinautCharacter* character = Cast<AOrbinautCharacter>(OtherActor);
 	if (character)
 	{

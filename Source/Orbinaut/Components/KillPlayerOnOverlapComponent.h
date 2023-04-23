@@ -20,9 +20,8 @@ public:
 	UKillPlayerOnOverlapComponent();
 
 
-	// Override the OnActorBeginOverlap function
 	UFUNCTION()
-		void OnActorBeginOverlap(AActor* OverlappedActor, AActor* OtherActor);
+		void OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 protected:
 	// Called when the game starts
