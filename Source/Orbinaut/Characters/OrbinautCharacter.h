@@ -77,6 +77,9 @@ public:
 
 	UFUNCTION()
 		void StopTractorBeam();
+	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Tractor Beam")
+		class UNiagaraComponent* TractorBeamParticles = nullptr;
 
 	// -1 = suck, +1 = blow, 0 = stop.
 	UFUNCTION()
@@ -151,6 +154,8 @@ protected:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Tractor Beam")
 		TEnumAsByte<ETractorBeamMode> TractorBeamMode = ETractorBeamMode::Off;
+
+	void UpdateTractorBeamParticles(float direcction, bool active);
 
 	void FireThruster(EThrustDirection direction, bool bOn);
 };

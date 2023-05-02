@@ -3,4 +3,19 @@
 
 #include "DeathCallback.h"
 
-// Add default functionality here for any IDeathCallback functions that are not pure virtual.
+#include "Orbinaut/Helpers/ActorHelpers.h"
+
+
+TArray<TScriptInterface<IDeathCallback> > UDeathCallback::GetDeathCallbacks(AActor* root)
+{
+	return UActorHelpers::FindActorOrComponentInterfacesRecursive<IDeathCallback>(UDeathCallback::StaticClass(), root);
+}
+
+void UDeathCallback::Trigger(AActor* root)
+{
+	auto deathCallbacks = UDeathCallback::GetDeathCallbacks(root);
+	for (const auto& callback : deathCallbacks)
+	{
+		callback->Execute_OnDied(callback.GetObject());
+	}
+}

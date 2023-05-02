@@ -37,11 +37,11 @@ public:
 
 	// Called whenever the level is exited.
 	UFUNCTION(BlueprintCallable)
-		void ExitLevel(float DelayTime);
+		void ExitLevel(float DelayTime, const FName& NextLevel);
 
 	// Called to restart the current level.
 	UFUNCTION(BlueprintCallable)
-		void RestartLevel(float DelayTime);
+		void RestartLevel(float DelayTime, const FName& NextLevel = FName(""));
 
 
 	// Called when the portal is opened.

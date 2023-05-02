@@ -2,6 +2,7 @@
 
 #include "Orbinaut/Components/KillPlayerOnOverlapComponent.h"
 #include "Orbinaut/Characters/OrbinautCharacter.h"
+#include "Orbinaut/Interfaces/DeathCallback.h"
 
 // Sets default values for this component's properties
 UKillPlayerOnOverlapComponent::UKillPlayerOnOverlapComponent()
@@ -10,7 +11,7 @@ UKillPlayerOnOverlapComponent::UKillPlayerOnOverlapComponent()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = false;
 
-
+	IgnoreCollisionProfiles.Add("GravitySource");
 }
 
 
@@ -23,10 +24,10 @@ void UKillPlayerOnOverlapComponent::BeginPlay()
 	// Bind the OnActorBeginOverlap function to the OnComponentBeginOverlap event.
 	if (GetOwner())
 	{
-		TArray<UActorComponent*> primtives = GetOwner()->GetComponentsByClass(UPrimitiveComponent::StaticClass());
-		for (UActorComponent* component : primtives)
+		TInlineComponentArray<UPrimitiveComponent*> primitives;
+		GetOwner()->GetComponents<UPrimitiveComponent>(primitives,  true);
+		for (UPrimitiveComponent* prim : primitives)
 		{
-			UPrimitiveComponent* prim = Cast<UPrimitiveComponent>(component);
 			if (prim && prim->GetCollisionProfileName() == "KillZone")
 			{
 				// Lol hack.
@@ -44,7 +45,8 @@ void UKillPlayerOnOverlapComponent::OnOverlapBegin(UPrimitiveComponent* Overlapp
 												   int32 OtherBodyIndex, 
 												   bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (OtherComp->GetCollisionProfileName() == "GravitySource")
+	const FName& collisionProfile = OtherComp->GetCollisionProfileName();
+	if (IgnoreCollisionProfiles.ContainsByPredicate([collisionProfile](const FName& a){ return a == collisionProfile; }))
 	{
 		// Lol, hack.
 		return;
@@ -55,4 +57,9 @@ void UKillPlayerOnOverlapComponent::OnOverlapBegin(UPrimitiveComponent* Overlapp
 		OnKill.Broadcast();
 		character->Die();
 	}
+	else
+	{
+		UDeathCallback::Trigger(OtherActor);
+	}
+
 }

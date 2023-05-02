@@ -45,6 +45,13 @@ void URadialPhysicsBody::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 
 	if (IsDead)
 	{
+		for (auto* particles : AttractionParticleSystems)
+		{
+			if (particles)
+			{
+				particles->Deactivate();
+			}
+		}
 		return;
 	}
 	UPrimitiveComponent* prim = GetOwner()->FindComponentByClass<UPrimitiveComponent>();
@@ -85,8 +92,8 @@ void URadialPhysicsBody::OnEnterRadius(class URadialPhysicsSource* source)
 	}
 	if (source->AttractionParticles)
 	{
-		AttractionParticleSystems.Add(UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetOwner(), source->AttractionParticles,
-			source->GetComponentLocation(), FRotator(), FVector::One(), true, true));
+		AttractionParticleSystems.Add(UNiagaraFunctionLibrary::SpawnSystemAttached(source->AttractionParticles, GetOwner()->GetRootComponent(),
+			FName(), FVector(), FRotator(), EAttachLocation::KeepRelativeOffset, false, false));
 		AttractionParticleSystems.Last()->Deactivate();
 	}
 	else

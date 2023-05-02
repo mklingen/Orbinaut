@@ -4,6 +4,7 @@
 #include "Orbinaut/Actors/LevelExit.h"
 #include "Orbinaut/Characters/OrbinautCharacter.h"
 #include "Components/SphereComponent.h"
+#include "Engine/ObjectLibrary.h"
 #include "Orbinaut/OrbinautGameModeBase.h"
 
 // Sets default values
@@ -51,7 +52,7 @@ void ALevelExit::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Oth
 			OnPlayerOverlap.Broadcast();
 			if (GameMode)
 			{
-				GameMode->ExitLevel(DelayForNextLevel);
+				GameMode->ExitLevel(DelayForNextLevel, NextLevelName);
 			}
 		}
 	}
@@ -69,4 +70,24 @@ void ALevelExit::Close()
 {
 	IsOpen = false;
 	OnClosed.Broadcast();
+}
+
+TArray<FName> ALevelExit::GetAllMapNames()
+{
+	auto ObjectLibrary = UObjectLibrary::CreateLibrary(UWorld::StaticClass(), false, true);
+	ObjectLibrary->LoadAssetDataFromPath(TEXT("/Game/Levels"));
+	TArray<FAssetData> AssetDatas;
+	ObjectLibrary->GetAssetDataList(AssetDatas);
+	UE_LOG(LogTemp, Warning, TEXT("Found maps: %d"), AssetDatas.Num());
+
+	TArray<FName> Names = TArray<FName>();
+
+	for (int32 i = 0; i < AssetDatas.Num(); ++i)
+	{
+		FAssetData& AssetData = AssetDatas[i];
+
+		auto name = AssetData.AssetName;
+		Names.Add(name);
+	}
+	return Names;
 }

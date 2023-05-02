@@ -52,11 +52,14 @@ AOrbinautCharacter::AOrbinautCharacter()
     TractorBeam->Linear = 0;
     TractorBeam->Square = 0;
     TractorBeam->SetupAttachment(RootComponent);
+    TractorBeamParticles = CreateDefaultSubobject<UNiagaraComponent>(TEXT("TractorBeamParticles"));
+    TractorBeamParticles->SetupAttachment(RootComponent);
 
     UEnum* staticEnum = StaticEnum < EThrustDirection>();
     Thrusters.Empty();
     // Initialize each thruster.
-    for (const EThrustDirection& key : { EThrustDirection::VE_Down, EThrustDirection::VE_Left, EThrustDirection::VE_Right, EThrustDirection::VE_Up }) {
+    for (const EThrustDirection& key : { EThrustDirection::VE_Down, EThrustDirection::VE_Left, EThrustDirection::VE_Right, EThrustDirection::VE_Up }) 
+    {
         FThrusterSFX thruster;
         thruster.ThrustDirection = key;
         FString name = staticEnum->GetNameStringByValue(static_cast<int64_t>(key));
@@ -128,10 +131,8 @@ void AOrbinautCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 
     // Bind the LeftRight axis to a function that sets the current value of the LeftRight member variable
     PlayerInputComponent->BindAxis("LeftRight", this, &AOrbinautCharacter::SetLeftRight);
-
     // Bind the UpDown axis to a function that sets the current value of the UpDown member variable
     PlayerInputComponent->BindAxis("UpDown", this, &AOrbinautCharacter::SetUpDown);
-
     // Bind the SuckBlow  axis to a function that sets whether we are sucking or blowing with the tractor beam.
     PlayerInputComponent->BindAxis("SuckBlow", this, &AOrbinautCharacter::SetTractorBeamValue);
 }
@@ -212,6 +213,14 @@ void AOrbinautCharacter::Disable(bool bHide)
     FireThruster(EThrustDirection::VE_Up, false);
     FireThruster(EThrustDirection::VE_Left, false);
     FireThruster(EThrustDirection::VE_Right, false);
+    if (TractorBeam)
+    {
+        TractorBeam->IsEnabled = false;
+    }
+    if (TractorBeamParticles)
+    {
+        TractorBeamParticles->Deactivate();
+    }
 }
 
 void AOrbinautCharacter::Die()
@@ -220,7 +229,6 @@ void AOrbinautCharacter::Die()
     {
         return;
     }
-    TractorBeam->IsEnabled = false;
     Disable(true);
 
     auto deathCallbacks = GET_INTERFACES_RECURSIVE(DeathCallback, this);
@@ -237,6 +245,25 @@ void AOrbinautCharacter::Die()
 
 
 
+void AOrbinautCharacter::UpdateTractorBeamParticles(float direction, bool active)
+{
+    if (TractorBeamParticles)
+    {
+        if (active)
+        {
+            TractorBeamParticles->Activate(true);
+        }
+        else
+        {
+            TractorBeamParticles->Deactivate();
+        }
+        static const FString directionKey("Direction");
+        static const FString radiusKey("Radius");
+        TractorBeamParticles->SetNiagaraVariableFloat(directionKey, direction);
+        TractorBeamParticles->SetNiagaraVariableFloat(radiusKey, TractorBeam->InfluenceRadius);
+    }
+}
+
 void AOrbinautCharacter::StartSucking()
 {
     if (IsDead)
@@ -246,6 +273,7 @@ void AOrbinautCharacter::StartSucking()
     TractorBeam->Constant = MaxSuckForce;
     TractorBeam->IsEnabled = true;
     TractorBeamMode = ETractorBeamMode::Sucking;
+    UpdateTractorBeamParticles(-1.0, true);
 }
 
 
@@ -258,6 +286,7 @@ void AOrbinautCharacter::StartBlowing()
     TractorBeam->Constant = -MaxBlowForce;
     TractorBeam->IsEnabled = true;
     TractorBeamMode = ETractorBeamMode::Blowing;
+    UpdateTractorBeamParticles(1.0, true);
 }
 
 
@@ -270,6 +299,7 @@ void AOrbinautCharacter::StopTractorBeam()
     TractorBeam->Constant = -MaxBlowForce;
     TractorBeam->IsEnabled = false;
     TractorBeamMode = ETractorBeamMode::Off;
+    UpdateTractorBeamParticles(-1.0, false);
 }
 
 void AOrbinautCharacter::SetTractorBeamValue(float value)
@@ -278,11 +308,11 @@ void AOrbinautCharacter::SetTractorBeamValue(float value)
     {
         StopTractorBeam();
     }
-    else if (value > 0)
+    else if (value > 0 && TractorBeamMode != ETractorBeamMode::Blowing)
     {
         StartBlowing();
     }
-    else
+    else if (value < 0 && TractorBeamMode != ETractorBeamMode::Sucking)
     {
         StartSucking();
     }

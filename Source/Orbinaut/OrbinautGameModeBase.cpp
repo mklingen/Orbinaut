@@ -57,19 +57,23 @@ void AOrbinautGameModeBase::BeginPlay()
 	UpdateGemCount();
 }
 
-void AOrbinautGameModeBase::ExitLevel(float DelayTime)
+void AOrbinautGameModeBase::ExitLevel(float DelayTime, const FName& NextLevel)
 {
-	// TODO load next level
-	RestartLevel(DelayTime);
+	RestartLevel(DelayTime, NextLevel);
 }
 
 
-void AOrbinautGameModeBase::RestartLevel(float DelayTime)
+void AOrbinautGameModeBase::RestartLevel(float DelayTime, const FName& NextLevel)
 {
-	auto restart = [this]()
+	auto restart = [this, NextLevel]()
 	{
 		BeforeNewLevelLoaded();
-		UGameplayStatics::OpenLevel(this, FName(*GetWorld()->GetName()), false);
+		FName next = NextLevel;
+		if (0 == next.GetStringLength() || NextLevel.IsNone())
+		{
+			next = FName(*GetWorld()->GetName());
+		}
+		UGameplayStatics::OpenLevel(this, next, false);
 		UpdateGemCount();
 	};
 	if (DelayTime <= 0.0)

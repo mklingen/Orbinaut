@@ -48,6 +48,13 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Callbacks")
 		FOnPlayerOverlap OnClosed;
 
+	// The name of the next level. If empty, reloads the current level.
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Portal", meta = (GetOptions = "GetAllMapNames"))
+		FName NextLevelName = "";
+
+
+	UFUNCTION(CallInEditor)
+		TArray<FName> GetAllMapNames();
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

@@ -7,6 +7,7 @@
 #include "Orbinaut/Helpers/ActorHelpers.h"
 #include "Orbinaut/Interfaces/DeathCallback.h"
 
+
 ABullet::ABullet()
 {
     PrimaryActorTick.bCanEverTick = false;
@@ -62,6 +63,7 @@ void ABullet::OnBulletHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
         }
         else
         {
+            UDeathCallback::Trigger(OtherActor);
             DestroyBullet();
         }
     }

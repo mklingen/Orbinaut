@@ -11,6 +11,10 @@ UINTERFACE(MinimalAPI)
 class UDeathCallback : public UInterface
 {
 	GENERATED_BODY()
+
+public:
+	static TArray<TScriptInterface<class IDeathCallback> > GetDeathCallbacks(AActor* root);
+	static void Trigger(AActor* root);
 };
 
 /**

@@ -23,6 +23,9 @@ public:
 	UFUNCTION()
 		void OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Collision")
+		TArray<FName> IgnoreCollisionProfiles;
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
