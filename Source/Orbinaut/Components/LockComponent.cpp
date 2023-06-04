@@ -36,7 +36,15 @@ void ULockComponent::BeginPlay()
 
 }
 
+void ULockComponent::BeginDestroy()
+{
+	Super::BeginDestroy();
+	if (GetWorld())
+	{
+		GetWorld()->GetTimerManager().ClearTimer(KeyAnimationHandle);
+	}
 
+}
 void ULockComponent::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (!OtherActor) 
@@ -80,7 +88,8 @@ void ULockComponent::ConstrainKey()
 	{
 		return;
 	}
-	UActorHelpers::SimpleLerpOverTime(CurrentKey, CurrentKey->GetActorTransform(), GetOwner()->GetActorTransform() * ConstraintTransform, 1.0f);
+	GetWorld()->GetTimerManager().ClearTimer(KeyAnimationHandle);
+	KeyAnimationHandle = UActorHelpers::SimpleLerpOverTime(CurrentKey, CurrentKey->GetActorTransform(), GetOwner()->GetActorTransform() * ConstraintTransform, 1.0f);
 	TArray<UPrimitiveComponent*> primitives = UActorHelpers::FindComponentsRecursive<UPrimitiveComponent>(CurrentKey);
 	for (UPrimitiveComponent* prim : primitives) {
 		prim->SetSimulatePhysics(false);

@@ -22,7 +22,7 @@ public:
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
-
+	virtual void BeginDestroy() override;
 public:	
 
 	// Key that goes into this lock.
@@ -47,7 +47,6 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void ReleaseKey();
 
-
 	UFUNCTION()
 		void OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
@@ -58,4 +57,7 @@ public:
 private:
 	UPROPERTY()
 		AActor* CurrentKey = nullptr;
+
+	UPROPERTY()
+		FTimerHandle KeyAnimationHandle;
 };

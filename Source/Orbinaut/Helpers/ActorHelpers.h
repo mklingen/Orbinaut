@@ -192,5 +192,5 @@ public:
 
 	static AActor* GetRootActor(AActor* child);
 
-	static void SimpleLerpOverTime(AActor* actor, const FTransform& start, const FTransform& end, float movementTime);
+	static FTimerHandle SimpleLerpOverTime(AActor* actor, const FTransform& start, const FTransform& end, float movementTime);
 };

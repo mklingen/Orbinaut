@@ -63,13 +63,18 @@ AActor* UActorHelpers::GetRootActor(AActor* child)
 	return child;
 }
 
-void UActorHelpers::SimpleLerpOverTime(AActor* actor, const FTransform& start, const FTransform& end, float movementTime)
+FTimerHandle UActorHelpers::SimpleLerpOverTime(AActor* actor, const FTransform& start, const FTransform& end, float movementTime)
 {
 	float startTime = actor->GetWorld()->GetTimeSeconds();
 	float endTime = startTime + movementTime;
 	FTimerHandle handle;
 	actor->GetWorldTimerManager().SetTimer(handle, [&handle, actor, startTime, endTime, start, end]()
 	{
+			if (!actor || !IsValid(actor) || actor->GetWorld() == nullptr)
+			{
+				// TODO (leaks)?
+				return;
+			}
 			float t = actor->GetWorld()->GetTimeSeconds() - startTime;
 			float alpha = t / (endTime - startTime);
 			if (alpha > 1.0f)
@@ -83,4 +88,5 @@ void UActorHelpers::SimpleLerpOverTime(AActor* actor, const FTransform& start, c
 					FMath::Lerp(start.GetLocation(), end.GetLocation(), alpha), end.GetScale3D());
 			actor->SetActorTransform(interp);
 	}, 0.016f, true);
+	return handle;
 }
