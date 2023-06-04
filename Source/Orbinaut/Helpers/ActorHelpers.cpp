@@ -62,3 +62,25 @@ AActor* UActorHelpers::GetRootActor(AActor* child)
 	}
 	return child;
 }
+
+void UActorHelpers::SimpleLerpOverTime(AActor* actor, const FTransform& start, const FTransform& end, float movementTime)
+{
+	float startTime = actor->GetWorld()->GetTimeSeconds();
+	float endTime = startTime + movementTime;
+	FTimerHandle handle;
+	actor->GetWorldTimerManager().SetTimer(handle, [&handle, actor, startTime, endTime, start, end]()
+	{
+			float t = actor->GetWorld()->GetTimeSeconds() - startTime;
+			float alpha = t / (endTime - startTime);
+			if (alpha > 1.0f)
+			{
+				// Interpolation complete, clear the timer
+				actor->GetWorldTimerManager().ClearTimer(handle);
+				return;
+			}
+			float clampedAlpha = FMath::Clamp(alpha, 0.0f, 1.0f);
+			FTransform interp = FTransform(FQuat4d::Slerp(start.Rotator().Quaternion(), end.Rotator().Quaternion(), alpha), 
+					FMath::Lerp(start.GetLocation(), end.GetLocation(), alpha), end.GetScale3D());
+			actor->SetActorTransform(interp);
+	}, 0.016f, true);
+}
